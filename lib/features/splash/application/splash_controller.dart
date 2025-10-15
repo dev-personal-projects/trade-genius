@@ -1,7 +1,7 @@
 import 'dart:async';
 import '../../../core/constants/app_constants.dart';
 
-enum NextRoute { home /* , onboarding, auth */ }
+enum NextRoute { onboarding, home }
 
 final class SplashController {
   Future<NextRoute> resolveNext() async {
@@ -9,6 +9,6 @@ final class SplashController {
     await Future<void>.delayed(
       const Duration(milliseconds: AppConstants.splashMinMs),
     );
-    return NextRoute.home;
+    return NextRoute.onboarding;
   }
 }

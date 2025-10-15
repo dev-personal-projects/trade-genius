@@ -1,0 +1,11 @@
+build/
+.git
+.github
+.gradle
+.idea
+android/
+ios/
+.dart_tool
+packages
+pubspec.lock
+**/build/

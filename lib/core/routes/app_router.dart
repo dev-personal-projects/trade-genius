@@ -3,10 +3,12 @@
 import 'package:go_router/go_router.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
+import '../../features/onboarding/presentation/pages/onboarding_screen.dart';
 
 
 sealed class AppRoutes {
   static const splash = '/';
+  static const onboarding = '/onboarding';
   static const home = '/home';
 }
 
@@ -24,6 +26,10 @@ final class AppRouter {
         path: AppRoutes.home,
         builder: (context, state) => const HomeScreen(),
       ),
+     GoRoute(
+  path: AppRoutes.onboarding,
+  builder: (context, state) => const OnboardingScreen(),
+),
     ],
   );
 }

@@ -1,6 +1,8 @@
 // features/splash/presentation/splash_screen.dart
 // Why: Minimal animated splash that asks controller where to go, then navigates.
 // Uses built-in animations (no extra packages) to keep setup simple.
+// ignore_for_file: unused_import
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -50,6 +52,9 @@ class _SplashScreenState extends State<SplashScreen>
       if (!mounted) return;
 
       switch (next) {
+        case NextRoute.onboarding:
+          context.go(AppRoutes.onboarding);
+          break;
         case NextRoute.home:
           context.go(AppRoutes.home);
           break;
@@ -57,7 +62,7 @@ class _SplashScreenState extends State<SplashScreen>
     } catch (e) {
       // Fallback navigation
       if (mounted) {
-        context.go(AppRoutes.home);
+        context.go(AppRoutes.onboarding);
       }
     }
   }
@@ -83,18 +88,25 @@ class _SplashScreenState extends State<SplashScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Logo
-                Container(
+                Image.asset(
+                  AppAssets.logo,
                   width: 120,
                   height: 120,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(
-                    Icons.trending_up,
-                    size: 60,
-                    color: Colors.white,
-                  ),
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Icon(
+                        Icons.trending_up,
+                        size: 60,
+                        color: Colors.white,
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 24),
                 // Brand
