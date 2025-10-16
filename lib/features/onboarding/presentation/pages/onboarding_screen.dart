@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tradegenius/core/services/onboarding_service.dart';
 import '../../../../core/routes/app_router.dart';
 import '../../domain/entities/onboarding_page.dart';
 import '../widgets/onboarding_page_widget.dart';
@@ -44,15 +45,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _onNext() {
-    if (_currentPage < _pages.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    } else {
-      context.go(AppRoutes.home);
-    }
+  if (_currentPage < _pages.length - 1) {
+    _pageController.nextPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  } else {
+    OnboardingService.markCompleted();
+    context.go(AppRoutes.login);
   }
+}
+
 
   @override
   void dispose() {
@@ -74,7 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Align(
               alignment: Alignment.topRight,
               child: TextButton(
-                onPressed: () => context.go(AppRoutes.home),
+                onPressed: () => context.go(AppRoutes.login),
                 child: Text(
                   'Skip',
                   style: TextStyle(
