@@ -1,14 +1,24 @@
 import 'dart:async';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/services/supabase_service.dart';
+import '../../../core/services/onboarding_service.dart';
 
-enum NextRoute { onboarding, home }
+enum NextRoute { onboarding, login, home }
 
 final class SplashController {
+
   Future<NextRoute> resolveNext() async {
-    // TODO: Insert real checks later: first-run, auth session, deep links, etc.
     await Future<void>.delayed(
       const Duration(milliseconds: AppConstants.splashMinMs),
     );
-    return NextRoute.onboarding;
+
+    final user = SupabaseService.client.auth.currentUser;
+    
+    if (user != null) {
+      return NextRoute.home;
+    }
+    
+    final onboardingCompleted = await OnboardingService.isCompleted();
+    return onboardingCompleted ? NextRoute.login : NextRoute.onboarding;
   }
 }

@@ -1,10 +1,12 @@
-// main.dart
-// Why: Keep entrypoint minimal. Delegates all setup to App(). No business/UI logic here.
-
 import 'package:flutter/material.dart';
 import 'app.dart';
+import 'core/services/supabase_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Supabase before running the app
+  await SupabaseService.initialize();
+  
   runApp(const App());
 }

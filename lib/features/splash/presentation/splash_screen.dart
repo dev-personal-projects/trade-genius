@@ -55,6 +55,9 @@ class _SplashScreenState extends State<SplashScreen>
         case NextRoute.onboarding:
           context.go(AppRoutes.onboarding);
           break;
+        case NextRoute.login:
+          context.go(AppRoutes.login);
+          break;
         case NextRoute.home:
           context.go(AppRoutes.home);
           break;

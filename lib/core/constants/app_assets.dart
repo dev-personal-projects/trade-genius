@@ -5,4 +5,6 @@ final class AppAssets {
   AppAssets._();
 
   static const logo = 'assets/icons/splash-logo.png';
+  static const onboarding = 'assets/images/onboarding';
+
 }
