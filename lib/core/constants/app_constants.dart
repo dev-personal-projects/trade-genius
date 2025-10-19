@@ -4,7 +4,7 @@
 final class AppConstants {
   AppConstants._();
 
-  static const splashMinMs = 1200; // min visible time for splash
+  static const splashMinMs = 600; // min visible time for splash
   static const brandName = 'Trade Genius';
   static const tagline = 'Learn • Practice • Grow';
 }
