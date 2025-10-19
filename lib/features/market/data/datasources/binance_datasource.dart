@@ -7,6 +7,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';
+import '../../domain/entities/candlestick.dart';
 import '../../domain/entities/crypto_coin.dart';
 import '../../domain/entities/price_point.dart';
 import '../../domain/entities/time_interval.dart';
@@ -21,7 +22,6 @@ class BinanceDatasource {
   // Fetch top coins with 24h ticker data
   Future<List<CryptoCoin>> getTopCoins({int limit = 50}) async {
     try {
-      // Get 24h ticker for all USDT pairs
       final response = await _client.get(
         Uri.parse('$_baseUrl/ticker/24hr'),
       );
@@ -32,17 +32,51 @@ class BinanceDatasource {
 
       final List<dynamic> data = json.decode(response.body);
 
-      // Filter USDT pairs and convert to CryptoCoin
       final coins = data
           .where((item) => item['symbol'].toString().endsWith('USDT'))
           .map((item) => _mapToCryptoCoin(item))
           .toList();
 
-      // Sort by volume (proxy for market cap) and take top N
       coins.sort((a, b) => b.volume24h.compareTo(a.volume24h));
       return coins.take(limit).toList();
     } catch (e) {
       throw Exception('Error fetching top coins: $e');
+    }
+  }
+
+  // Get candlestick data for charts
+  Future<List<Candlestick>> getCandlesticks({
+    required String symbol,
+    required TimeInterval interval,
+    int limit = 100,
+  }) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$_baseUrl/klines').replace(queryParameters: {
+          'symbol': '${symbol.toUpperCase()}USDT',
+          'interval': interval.binanceInterval,
+          'limit': limit.toString(),
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to fetch candlesticks');
+      }
+
+      final List<dynamic> data = json.decode(response.body);
+
+      return data.map((candle) {
+        return Candlestick(
+          timestamp: DateTime.fromMillisecondsSinceEpoch(candle[0]),
+          open: double.parse(candle[1].toString()),
+          high: double.parse(candle[2].toString()),
+          low: double.parse(candle[3].toString()),
+          close: double.parse(candle[4].toString()),
+          volume: double.parse(candle[5].toString()),
+        );
+      }).toList();
+    } catch (e) {
+      throw Exception('Error fetching candlesticks: $e');
     }
   }
 
@@ -52,7 +86,6 @@ class BinanceDatasource {
     required TimeInterval interval,
   }) async {
     try {
-      // Calculate limit based on interval
       final limit = interval == TimeInterval.hour24 ? 24 :
       interval == TimeInterval.days7 ? 42 : 30;
 
@@ -87,34 +120,31 @@ class BinanceDatasource {
       Uri.parse('$_wsUrl/${symbol.toLowerCase()}usdt@trade'),
     );
 
-    // Transform WebSocket stream to price stream
     return channel.stream.map((data) {
       final json = jsonDecode(data);
-      return double.parse(json['p']); // 'p' is the price field
+      return double.parse(json['p']);
     }).handleError((error) {
       channel.sink.close();
       throw Exception('WebSocket error: $error');
     });
   }
 
-  // Helper: Convert Binance API response to CryptoCoin
   CryptoCoin _mapToCryptoCoin(Map<String, dynamic> json) {
     final symbol = json['symbol'].toString().replaceAll('USDT', '');
 
     return CryptoCoin(
       symbol: symbol,
-      name: _getCoinName(symbol), // Map symbol to full name
+      name: _getCoinName(symbol),
       currentPrice: double.parse(json['lastPrice']),
       priceChange24h: double.parse(json['priceChangePercent']),
       volume24h: double.parse(json['volume']) * double.parse(json['lastPrice']),
-      marketCap: 0, // Binance doesn't provide market cap
+      marketCap: 0,
       high24h: double.parse(json['highPrice']),
       low24h: double.parse(json['lowPrice']),
-      rank: 0, // Will be set based on volume sorting
+      rank: 0,
     );
   }
 
-  // Helper: Map common symbols to full names
   String _getCoinName(String symbol) {
     const names = {
       'BTC': 'Bitcoin',

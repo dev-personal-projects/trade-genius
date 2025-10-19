@@ -2,6 +2,7 @@
 // Why: Main market screen with real-time price updates
 
 import 'package:flutter/material.dart';
+import 'package:tradegenius/features/market/presentation/widgets/coin_detail_screen.dart';
 import '../../application/market_controller.dart';
 import '../../application/market_state.dart';
 import '../../data/datasources/binance_datasource.dart';
@@ -113,9 +114,7 @@ class _MarketScreenState extends State<MarketScreen> {
 
                   if (state is MarketLoaded) ...[
                     SliverToBoxAdapter(
-                      child: MarketStatsHeader(
-                        totalCoins: state.coins.length,
-                      ),
+                      child: MarketStatsHeader(totalCoins: state.coins.length),
                     ),
 
                     if (state.trending.isNotEmpty)
@@ -151,22 +150,25 @@ class _MarketScreenState extends State<MarketScreen> {
                       )
                     else
                       SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final coin = state.coins[index];
-                            return CoinListItem(
-                              coin: coin,
-                              // Add live price stream for top 20 coins
-                              priceStream: index < 20 
-                                  ? _controller.getPriceStream(coin.symbol)
-                                  : null,
-                              onTap: () {
-                                // TODO: Navigate to coin detail
-                              },
-                            );
-                          },
-                          childCount: state.coins.length,
-                        ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final coin = state.coins[index];
+                          return CoinListItem(
+                            coin: coin,
+                            // Add live price stream for top 20 coins
+                            priceStream: index < 20
+                                ? _controller.getPriceStream(coin.symbol)
+                                : null,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      CoinDetailScreen(coin: coin),
+                                ),
+                              );
+                            },
+                          );
+                        }, childCount: state.coins.length),
                       ),
                   ],
                 ],
