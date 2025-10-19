@@ -20,7 +20,7 @@ class BinanceDatasource {
   BinanceDatasource({http.Client? client}) : _client = client ?? http.Client();
 
   // Fetch top coins with 24h ticker data
-  Future<List<CryptoCoin>> getTopCoins({int limit = 50}) async {
+  Future<List<CryptoCoin>> getTopCoins({int limit = 200}) async {
     try {
       final response = await _client.get(
         Uri.parse('$_baseUrl/ticker/24hr'),

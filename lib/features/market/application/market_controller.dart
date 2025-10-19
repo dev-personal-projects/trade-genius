@@ -24,8 +24,8 @@ class MarketController extends ValueNotifier<MarketState> {
   Future<void> loadMarketData() async {
     value = const MarketLoading();
 
-    final coinsResult = await _repository.getTopCoins(limit: 50);
-    final trendingResult = await _repository.getTrendingCoins(limit: 10);
+    final coinsResult = await _repository.getTopCoins(limit: 200);
+    final trendingResult = await _repository.getTrendingCoins(limit: 30);
 
     switch (coinsResult) {
       case MarketSuccess(:final data):

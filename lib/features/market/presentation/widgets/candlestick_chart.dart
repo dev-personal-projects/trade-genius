@@ -1,15 +1,15 @@
 // lib/features/market/presentation/widgets/candlestick_chart.dart
-// Why: Interactive candlestick chart with drawing tools
+// Why: Responsive interactive candlestick chart with drawing tools
 
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
-import '../../../market/domain/entities/candlestick.dart';
-import '../../../market/domain/entities/chart_drawing.dart';
+import '../../domain/entities/candlestick.dart';
+import '../../domain/entities/chart_drawing.dart';
 
 class CandlestickChart extends StatefulWidget {
   final List<Candlestick> candles;
   final List<ChartDrawing> drawings;
   final Function(ChartDrawing) onDrawingAdded;
+  final Function(ChartDrawing)? onDrawingMoved;
   final DrawingType? activeDrawingTool;
 
   const CandlestickChart({
@@ -17,6 +17,7 @@ class CandlestickChart extends StatefulWidget {
     required this.candles,
     required this.drawings,
     required this.onDrawingAdded,
+    this.onDrawingMoved,
     this.activeDrawingTool,
   });
 
@@ -27,6 +28,36 @@ class CandlestickChart extends StatefulWidget {
 class _CandlestickChartState extends State<CandlestickChart> {
   Offset? _drawStart;
   Offset? _drawEnd;
+  double _minPrice = 0;
+  double _maxPrice = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _calculatePriceRange();
+  }
+
+  @override
+  void didUpdateWidget(CandlestickChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.candles != widget.candles) {
+      _calculatePriceRange();
+    }
+  }
+
+  void _calculatePriceRange() {
+    if (widget.candles.isEmpty) return;
+    _minPrice = widget.candles
+        .map((c) => c.low)
+        .reduce((a, b) => a < b ? a : b);
+    _maxPrice = widget.candles
+        .map((c) => c.high)
+        .reduce((a, b) => a > b ? a : b);
+    // Add 2% padding
+    final padding = (_maxPrice - _minPrice) * 0.02;
+    _minPrice -= padding;
+    _maxPrice += padding;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,112 +66,196 @@ class _CandlestickChartState extends State<CandlestickChart> {
     }
 
     final theme = Theme.of(context);
-    final maxPrice = widget.candles.map((c) => c.high).reduce((a, b) => a > b ? a : b);
-    final minPrice = widget.candles.map((c) => c.low).reduce((a, b) => a < b ? a : b);
 
-    return GestureDetector(
-      onPanStart: widget.activeDrawingTool != null ? _onPanStart : null,
-      onPanUpdate: widget.activeDrawingTool != null ? _onPanUpdate : null,
-      onPanEnd: widget.activeDrawingTool != null ? _onPanEnd : null,
-      child: Stack(
-        children: [
-          LineChart(
-            LineChartData(
-              minY: minPrice * 0.99,
-              maxY: maxPrice * 1.01,
-              minX: 0,
-              maxX: widget.candles.length.toDouble() - 1,
-              gridData: FlGridData(
-                show: true,
-                drawVerticalLine: true,
-                horizontalInterval: (maxPrice - minPrice) / 5,
-                getDrawingHorizontalLine: (value) {
-                  return FlLine(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                    strokeWidth: 1,
-                  );
-                },
-              ),
-              titlesData: FlTitlesData(
-                rightTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 60,
-                    getTitlesWidget: (value, meta) {
-                      return Text(
-                        '\$${value.toStringAsFixed(2)}',
-                        style: theme.textTheme.bodySmall,
-                      );
-                    },
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final chartHeight =
+            constraints.maxHeight - 40; // Reserve space for price labels
+        final chartWidth =
+            constraints.maxWidth - 80; // Reserve space for price axis
+
+        return GestureDetector(
+          onPanStart: widget.activeDrawingTool != null
+              ? (details) => _onPanStart(details, chartWidth, chartHeight)
+              : null,
+          onPanUpdate: widget.activeDrawingTool != null
+              ? (details) => _onPanUpdate(details, chartWidth, chartHeight)
+              : null,
+          onPanEnd: widget.activeDrawingTool != null ? _onPanEnd : null,
+          child: Container(
+            color: theme.scaffoldBackgroundColor,
+            child: Stack(
+              children: [
+                // Price axis (right side)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 40,
+                  width: 80,
+                  child: _buildPriceAxis(theme, chartHeight),
+                ),
+
+                // Chart area
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  right: 80,
+                  bottom: 40,
+                  child: Stack(
+                    children: [
+                      // Grid lines
+                      CustomPaint(
+                        size: Size(chartWidth, chartHeight),
+                        painter: GridPainter(
+                          minPrice: _minPrice,
+                          maxPrice: _maxPrice,
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.1,
+                          ),
+                        ),
+                      ),
+                      // Candlesticks
+                      CustomPaint(
+                        size: Size(chartWidth, chartHeight),
+                        painter: CandlestickPainter(
+                          candles: widget.candles,
+                          maxPrice: _maxPrice,
+                          minPrice: _minPrice,
+                        ),
+                      ),
+                      // User drawings
+                      CustomPaint(
+                        size: Size(chartWidth, chartHeight),
+                        painter: DrawingsPainter(
+                          drawings: widget.drawings,
+                          maxPrice: _maxPrice,
+                          minPrice: _minPrice,
+                          candleCount: widget.candles.length,
+                        ),
+                      ),
+                      // Drawing preview
+                      if (_drawStart != null && _drawEnd != null)
+                        CustomPaint(
+                          size: Size(chartWidth, chartHeight),
+                          painter: DrawingPreviewPainter(
+                            start: _drawStart!,
+                            end: _drawEnd!,
+                            color: widget.activeDrawingTool != null
+                                ? _getDrawingColor(widget.activeDrawingTool!)
+                                : Colors.white,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              ),
-              borderData: FlBorderData(show: false),
-              lineBarsData: [],
-              extraLinesData: ExtraLinesData(
-                horizontalLines: widget.drawings.map((drawing) {
-                  return HorizontalLine(
-                    y: drawing.startPrice,
-                    color: _getDrawingColor(drawing.type),
-                    strokeWidth: 2,
-                    dashArray: [5, 5],
-                  );
-                }).toList(),
-              ),
+
+                // Time axis (bottom)
+                Positioned(
+                  left: 0,
+                  right: 80,
+                  bottom: 0,
+                  height: 40,
+                  child: _buildTimeAxis(theme, chartWidth),
+                ),
+              ],
             ),
           ),
-          // Candlesticks overlay
-          CustomPaint(
-            size: Size.infinite,
-            painter: CandlestickPainter(
-              candles: widget.candles,
-              maxPrice: maxPrice,
-              minPrice: minPrice,
-            ),
-          ),
-          // Drawing preview
-          if (_drawStart != null && _drawEnd != null)
-            CustomPaint(
-              size: Size.infinite,
-              painter: DrawingPreviewPainter(
-                start: _drawStart!,
-                end: _drawEnd!,
-                color: widget.activeDrawingTool != null
-                    ? _getDrawingColor(widget.activeDrawingTool!)
-                    : Colors.white,
-              ),
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  void _onPanStart(DragStartDetails details) {
-    setState(() {
-      _drawStart = details.localPosition;
-    });
+  Widget _buildPriceAxis(ThemeData theme, double height) {
+    final priceRange = _maxPrice - _minPrice;
+    final steps = 5;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: List.generate(steps + 1, (index) {
+        final price = _maxPrice - (priceRange * index / steps);
+        return Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: Text(
+            '\$${price.toStringAsFixed(2)}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+        );
+      }),
+    );
   }
 
-  void _onPanUpdate(DragUpdateDetails details) {
-    setState(() {
-      _drawEnd = details.localPosition;
-    });
+  Widget _buildTimeAxis(ThemeData theme, double width) {
+    if (widget.candles.isEmpty) return const SizedBox();
+
+    final displayCount = 4;
+    final step = widget.candles.length ~/ displayCount;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: List.generate(displayCount, (index) {
+        final candleIndex = index * step;
+        if (candleIndex >= widget.candles.length) return const SizedBox();
+
+        final candle = widget.candles[candleIndex];
+        final time =
+            '${candle.timestamp.hour}:${candle.timestamp.minute.toString().padLeft(2, '0')}';
+
+        return Text(
+          time,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+        );
+      }),
+    );
+  }
+
+  void _onPanStart(DragStartDetails details, double width, double height) {
+    final localPos = details.localPosition;
+    if (localPos.dx >= 0 &&
+        localPos.dx <= width &&
+        localPos.dy >= 0 &&
+        localPos.dy <= height) {
+      setState(() => _drawStart = localPos);
+    }
+  }
+
+  void _onPanUpdate(DragUpdateDetails details, double width, double height) {
+    final localPos = details.localPosition;
+    if (localPos.dx >= 0 &&
+        localPos.dx <= width &&
+        localPos.dy >= 0 &&
+        localPos.dy <= height) {
+      setState(() => _drawEnd = localPos);
+    }
   }
 
   void _onPanEnd(DragEndDetails details) {
-    if (_drawStart != null && _drawEnd != null && widget.activeDrawingTool != null) {
-      // Convert screen coordinates to chart data
+    if (_drawStart != null &&
+        _drawEnd != null &&
+        widget.activeDrawingTool != null) {
+      // Convert screen Y to price
+      final priceRange = _maxPrice - _minPrice;
+      final startPrice =
+          _maxPrice - (_drawStart!.dy / context.size!.height * priceRange);
+      final endPrice =
+          _maxPrice - (_drawEnd!.dy / context.size!.height * priceRange);
+
       final drawing = ChartDrawing(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         type: widget.activeDrawingTool!,
-        startPrice: _drawStart!.dy,
-        endPrice: _drawEnd!.dy,
-        startIndex: _drawStart!.dx.toInt(),
-        endIndex: _drawEnd!.dx.toInt(),
+        startPrice: startPrice,
+        endPrice: endPrice,
+        startIndex:
+            (_drawStart!.dx / context.size!.width * widget.candles.length)
+                .toInt(),
+        endIndex: (_drawEnd!.dx / context.size!.width * widget.candles.length)
+            .toInt(),
       );
+
       widget.onDrawingAdded(drawing);
     }
     setState(() {
@@ -161,7 +276,42 @@ class _CandlestickChartState extends State<CandlestickChart> {
   }
 }
 
-// Custom painter for candlesticks
+// Grid painter
+class GridPainter extends CustomPainter {
+  final double minPrice;
+  final double maxPrice;
+  final Color color;
+
+  GridPainter({
+    required this.minPrice,
+    required this.maxPrice,
+    required this.color,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1;
+
+    // Horizontal lines
+    for (int i = 0; i <= 5; i++) {
+      final y = size.height * i / 5;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+
+    // Vertical lines
+    for (int i = 0; i <= 4; i++) {
+      final x = size.width * i / 4;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// Candlestick painter
 class CandlestickPainter extends CustomPainter {
   final List<Candlestick> candles;
   final double maxPrice;
@@ -175,17 +325,24 @@ class CandlestickPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (candles.isEmpty) return;
+
     final priceRange = maxPrice - minPrice;
     final candleWidth = size.width / candles.length;
+    final bodyWidth = candleWidth * 0.6;
 
     for (int i = 0; i < candles.length; i++) {
       final candle = candles[i];
       final x = i * candleWidth + candleWidth / 2;
 
-      final openY = size.height - ((candle.open - minPrice) / priceRange * size.height);
-      final closeY = size.height - ((candle.close - minPrice) / priceRange * size.height);
-      final highY = size.height - ((candle.high - minPrice) / priceRange * size.height);
-      final lowY = size.height - ((candle.low - minPrice) / priceRange * size.height);
+      final openY =
+          size.height - ((candle.open - minPrice) / priceRange * size.height);
+      final closeY =
+          size.height - ((candle.close - minPrice) / priceRange * size.height);
+      final highY =
+          size.height - ((candle.high - minPrice) / priceRange * size.height);
+      final lowY =
+          size.height - ((candle.low - minPrice) / priceRange * size.height);
 
       final color = candle.isBullish ? Colors.green : Colors.red;
       final paint = Paint()..color = color;
@@ -194,18 +351,20 @@ class CandlestickPainter extends CustomPainter {
       canvas.drawLine(
         Offset(x, highY),
         Offset(x, lowY),
-        paint..strokeWidth = 1,
+        paint..strokeWidth = 1.5,
       );
 
       // Draw body
       final bodyTop = candle.isBullish ? closeY : openY;
       final bodyBottom = candle.isBullish ? openY : closeY;
+      final bodyHeight = (bodyBottom - bodyTop).abs();
+
       canvas.drawRect(
-        Rect.fromLTRB(
-          x - candleWidth * 0.3,
+        Rect.fromLTWH(
+          x - bodyWidth / 2,
           bodyTop,
-          x + candleWidth * 0.3,
-          bodyBottom,
+          bodyWidth,
+          bodyHeight.clamp(1.0, double.infinity), // Minimum 1px height
         ),
         paint..style = PaintingStyle.fill,
       );
@@ -216,7 +375,75 @@ class CandlestickPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-// Custom painter for drawing preview
+// Drawings painter
+class DrawingsPainter extends CustomPainter {
+  final List<ChartDrawing> drawings;
+  final double maxPrice;
+  final double minPrice;
+  final int candleCount;
+
+  DrawingsPainter({
+    required this.drawings,
+    required this.maxPrice,
+    required this.minPrice,
+    required this.candleCount,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final priceRange = maxPrice - minPrice;
+
+    for (final drawing in drawings) {
+      final startY =
+          size.height -
+          ((drawing.startPrice - minPrice) / priceRange * size.height);
+      final endY =
+          size.height -
+          ((drawing.endPrice - minPrice) / priceRange * size.height);
+      final startX = (drawing.startIndex / candleCount) * size.width;
+      final endX = (drawing.endIndex / candleCount) * size.width;
+
+      final color = _getDrawingColor(drawing.type);
+      final paint = Paint()
+        ..color = color
+        ..strokeWidth = 2
+        ..style = PaintingStyle.stroke;
+
+      canvas.drawLine(Offset(startX, startY), Offset(endX, endY), paint);
+
+      // Draw label
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '\$${drawing.startPrice.toStringAsFixed(2)}',
+          style: TextStyle(
+            color: color,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(startX + 5, startY - 15));
+    }
+  }
+
+  Color _getDrawingColor(DrawingType type) {
+    switch (type) {
+      case DrawingType.supportLine:
+        return Colors.green;
+      case DrawingType.resistanceLine:
+        return Colors.red;
+      case DrawingType.trendLine:
+        return Colors.blue;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+// Drawing preview painter
 class DrawingPreviewPainter extends CustomPainter {
   final Offset start;
   final Offset end;
@@ -231,11 +458,15 @@ class DrawingPreviewPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color
+      ..color = color.withValues(alpha: 0.7)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
     canvas.drawLine(start, end, paint);
+
+    // Draw circles at endpoints
+    canvas.drawCircle(start, 4, Paint()..color = color);
+    canvas.drawCircle(end, 4, Paint()..color = color);
   }
 
   @override

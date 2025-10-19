@@ -122,7 +122,13 @@ class _MarketScreenState extends State<MarketScreen> {
                         child: TrendingSection(
                           coins: state.trending,
                           onCoinTap: (coin) {
-                            // TODO: Navigate to coin detail
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    CoinDetailScreen(coin: coin),
+                              ),
+                            );
                           },
                         ),
                       ),
