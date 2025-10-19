@@ -1,6 +1,8 @@
 // lib/features/market/presentation/widgets/live_price_text.dart
 // Why: Displays real-time price with flash animation on change
 
+// ignore_for_file: unused_field
+
 import 'package:flutter/material.dart';
 
 class LivePriceText extends StatefulWidget {
