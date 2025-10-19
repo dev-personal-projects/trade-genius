@@ -11,6 +11,8 @@ import '../../../market/domain/entities/time_interval.dart';
 import '../../data/datasources/binance_datasource.dart';
 import '../../data/datasources/drawing_storage.dart';
 import 'candlestick_chart.dart' as chart;
+import 'animated_price_widget.dart';
+import '../pages/fullscreen_chart_screen.dart';
 
 class CoinDetailScreen extends StatefulWidget {
   final CryptoCoin coin;
@@ -52,9 +54,9 @@ class _CoinDetailScreenState extends State<CoinDetailScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -66,6 +68,40 @@ class _CoinDetailScreenState extends State<CoinDetailScreen> {
 
   Future<void> _saveDrawings() async {
     await DrawingStorage.saveDrawings(widget.coin.symbol, _drawings);
+  }
+
+  void _openFullscreen() {
+    if (_candles.isEmpty) return;
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FullscreenChartScreen(
+          coin: widget.coin,
+          candles: _candles,
+          drawings: _drawings,
+          selectedInterval: _selectedInterval,
+          activeDrawingTool: _activeDrawingTool,
+          onDrawingAdded: (drawing) {
+            setState(() {
+              _drawings.add(drawing);
+              _activeDrawingTool = null;
+            });
+            _saveDrawings();
+          },
+          onDrawingMoved: (drawing) {
+            setState(() {
+              final index = _drawings.indexWhere((d) => d.id == drawing.id);
+              if (index != -1) _drawings[index] = drawing;
+            });
+            _saveDrawings();
+          },
+          onToolChanged: (tool) {
+            setState(() => _activeDrawingTool = tool);
+          },
+        ),
+      ),
+    );
   }
 
   Map<String, double> _calculateIndicators() {
@@ -93,7 +129,8 @@ class _CoinDetailScreenState extends State<CoinDetailScreen> {
       }
     }
 
-    final avgVolume = _candles.take(20).map((c) => c.volume).reduce((a, b) => a + b) / 20;
+    final avgVolume =
+        _candles.take(20).map((c) => c.volume).reduce((a, b) => a + b) / 20;
     final currentVolume = _candles.first.volume;
     final volumeRatio = currentVolume / avgVolume;
 
@@ -105,6 +142,18 @@ class _CoinDetailScreenState extends State<CoinDetailScreen> {
     final theme = Theme.of(context);
     final isPositive = widget.coin.isPositiveChange;
     final indicators = _calculateIndicators();
+    StreamBuilder<double>(
+      stream: _datasource.streamPrice(widget.coin.symbol),
+      initialData: widget.coin.currentPrice,
+      builder: (context, snapshot) {
+        return AnimatedPriceWidget(
+          price: snapshot.data ?? widget.coin.currentPrice,
+          style: theme.textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        );
+      },
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -117,9 +166,16 @@ class _CoinDetailScreenState extends State<CoinDetailScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(_showIndicators ? Icons.analytics : Icons.analytics_outlined),
+            icon: Icon(
+              _showIndicators ? Icons.analytics : Icons.analytics_outlined,
+            ),
             onPressed: () => setState(() => _showIndicators = !_showIndicators),
             tooltip: 'Technical Indicators',
+          ),
+          IconButton(
+            icon: const Icon(Icons.fullscreen),
+            onPressed: _openFullscreen,
+            tooltip: 'Fullscreen',
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -158,11 +214,23 @@ class _CoinDetailScreenState extends State<CoinDetailScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        _StatRow('24h High', '\$${widget.coin.high24h.toStringAsFixed(2)}', theme),
+                        _StatRow(
+                          '24h High',
+                          '\$${widget.coin.high24h.toStringAsFixed(2)}',
+                          theme,
+                        ),
                         const SizedBox(height: 4),
-                        _StatRow('24h Low', '\$${widget.coin.low24h.toStringAsFixed(2)}', theme),
+                        _StatRow(
+                          '24h Low',
+                          '\$${widget.coin.low24h.toStringAsFixed(2)}',
+                          theme,
+                        ),
                         const SizedBox(height: 4),
-                        _StatRow('Volume', '\$${(widget.coin.volume24h / 1000000).toStringAsFixed(2)}M', theme),
+                        _StatRow(
+                          'Volume',
+                          '\$${(widget.coin.volume24h / 1000000).toStringAsFixed(2)}M',
+                          theme,
+                        ),
                       ],
                     ),
                   ],
@@ -180,13 +248,19 @@ class _CoinDetailScreenState extends State<CoinDetailScreen> {
                       _IndicatorChip(
                         label: 'RSI',
                         value: indicators['RSI']!.toStringAsFixed(1),
-                        color: indicators['RSI']! > 70 ? Colors.red : 
-                               indicators['RSI']! < 30 ? Colors.green : Colors.orange,
+                        color: indicators['RSI']! > 70
+                            ? Colors.red
+                            : indicators['RSI']! < 30
+                            ? Colors.green
+                            : Colors.orange,
                       ),
                       _IndicatorChip(
                         label: 'Volume',
-                        value: '${indicators['VolumeRatio']!.toStringAsFixed(2)}x',
-                        color: indicators['VolumeRatio']! > 1.5 ? Colors.green : Colors.grey,
+                        value:
+                            '${indicators['VolumeRatio']!.toStringAsFixed(2)}x',
+                        color: indicators['VolumeRatio']! > 1.5
+                            ? Colors.green
+                            : Colors.grey,
                       ),
                     ],
                   ),
@@ -233,7 +307,9 @@ class _CoinDetailScreenState extends State<CoinDetailScreen> {
                     },
                     onDrawingMoved: (drawing) {
                       setState(() {
-                        final index = _drawings.indexWhere((d) => d.id == drawing.id);
+                        final index = _drawings.indexWhere(
+                          (d) => d.id == drawing.id,
+                        );
                         if (index != -1) _drawings[index] = drawing;
                       });
                       _saveDrawings();
@@ -263,7 +339,8 @@ class _CoinDetailScreenState extends State<CoinDetailScreen> {
                   isActive: _activeDrawingTool == DrawingType.supportLine,
                   onTap: () {
                     setState(() {
-                      _activeDrawingTool = _activeDrawingTool == DrawingType.supportLine
+                      _activeDrawingTool =
+                          _activeDrawingTool == DrawingType.supportLine
                           ? null
                           : DrawingType.supportLine;
                     });
@@ -276,7 +353,8 @@ class _CoinDetailScreenState extends State<CoinDetailScreen> {
                   isActive: _activeDrawingTool == DrawingType.resistanceLine,
                   onTap: () {
                     setState(() {
-                      _activeDrawingTool = _activeDrawingTool == DrawingType.resistanceLine
+                      _activeDrawingTool =
+                          _activeDrawingTool == DrawingType.resistanceLine
                           ? null
                           : DrawingType.resistanceLine;
                     });
@@ -289,7 +367,8 @@ class _CoinDetailScreenState extends State<CoinDetailScreen> {
                   isActive: _activeDrawingTool == DrawingType.trendLine,
                   onTap: () {
                     setState(() {
-                      _activeDrawingTool = _activeDrawingTool == DrawingType.trendLine
+                      _activeDrawingTool =
+                          _activeDrawingTool == DrawingType.trendLine
                           ? null
                           : DrawingType.trendLine;
                     });
@@ -342,7 +421,12 @@ class _StatRow extends StatelessWidget {
     return Row(
       children: [
         Text('$label: ', style: theme.textTheme.bodySmall),
-        Text(value, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+        Text(
+          value,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -353,7 +437,11 @@ class _IndicatorChip extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _IndicatorChip({required this.label, required this.value, required this.color});
+  const _IndicatorChip({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -366,8 +454,22 @@ class _IndicatorChip extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(label, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.bold)),
-          Text(value, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 12,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -402,13 +504,19 @@ class _DrawingToolButton extends StatelessWidget {
           color: isActive ? color.withValues(alpha: 0.2) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isActive ? color : theme.colorScheme.outline.withValues(alpha: 0.3),
+            color: isActive
+                ? color
+                : theme.colorScheme.outline.withValues(alpha: 0.3),
           ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: isActive ? color : theme.colorScheme.onSurface, size: 18),
+            Icon(
+              icon,
+              color: isActive ? color : theme.colorScheme.onSurface,
+              size: 18,
+            ),
             const SizedBox(height: 2),
             Text(
               label,
