@@ -1,7 +1,6 @@
 // core/routes/app_router.dart
 import 'package:go_router/go_router.dart';
 import 'package:tradegenius/core/widgets/app_scaffold.dart';
-import '../../features/home/presentation/home_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/onboarding/presentation/pages/onboarding_screen.dart';
 import '../../features/auth/presentation/pages/login_screen.dart';
