@@ -3,6 +3,12 @@
 // UX: Pull-to-refresh, real-time updates, smooth loading states, easy navigation
 
 import 'package:flutter/material.dart';
+import 'package:tradegenius/features/portfolio/domain/entities/holding.dart'
+    show Holding;
+import 'package:tradegenius/features/portfolio/presentation/pages/holding_detail_screen.dart'
+    show HoldingDetailScreen;
+import 'package:tradegenius/features/portfolio/presentation/widgets/add_holding_dialog.dart'
+    show AddHoldingDialog;
 import '../../../../core/theme/app_theme.dart';
 import '../../application/portfolio_controller.dart';
 import '../../application/portfolio_state.dart';
@@ -29,7 +35,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     super.initState();
     // initState - Called once when widget is inserted into widget tree
     // Perfect place to initialize controllers and load initial data
-    
+
     // Initialize controller with dependencies (Dependency Injection pattern)
     _controller = PortfolioController(
       PortfolioRepositoryImpl(
@@ -38,7 +44,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
       ),
       BinanceDatasource(),
     );
-    
+
     // Load portfolio data when screen opens
     _controller.loadPortfolio();
   }
@@ -69,7 +75,9 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
             onPressed: () {
               // TODO: Navigate to transactions screen
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Transaction history coming soon')),
+                const SnackBar(
+                  content: Text('Transaction history coming soon'),
+                ),
               );
             },
           ),
@@ -85,7 +93,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
           ),
         ],
       ),
-      
+
       // Main content area
       body: ValueListenableBuilder<PortfolioState>(
         // ValueListenableBuilder - Rebuilds when controller's value changes
@@ -96,60 +104,56 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
           return switch (state) {
             // Initial state - show nothing or placeholder
             PortfolioInitial() => const SizedBox.shrink(),
-            
+
             // Loading state - show centered progress indicator
             PortfolioLoading() => const Center(
-                child: CircularProgressIndicator(),
-              ),
-            
+              child: CircularProgressIndicator(),
+            ),
+
             // Error state - show error message with retry button
             PortfolioError(:final message) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: AppColors.bearish,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: AppColors.bearish),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Oops! Something went wrong',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Oops! Something went wrong',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      message,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => _controller.loadPortfolio(),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
                     ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: () => _controller.loadPortfolio(),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            
+            ),
+
             // Success state - show portfolio content
-            PortfolioLoaded(:final holdings, :final summary) => 
+            PortfolioLoaded(:final holdings, :final summary) =>
               holdings.isEmpty
-                  ? EmptyPortfolioWidget(
-                      onAddHolding: _showAddHoldingDialog,
-                    )
+                  ? EmptyPortfolioWidget(onAddHolding: _showAddHoldingDialog)
                   : RefreshIndicator(
                       // RefreshIndicator - Pull-to-refresh gesture
                       // UX: Standard mobile pattern for refreshing content
@@ -159,11 +163,13 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                       child: ListView(
                         // ListView - Scrollable list of widgets
                         // Automatically handles scrolling, performance optimization
-                        padding: const EdgeInsets.only(bottom: 80), // Space for FAB
+                        padding: const EdgeInsets.only(
+                          bottom: 80,
+                        ), // Space for FAB
                         children: [
                           // Portfolio summary at top
                           PortfolioSummaryCard(summary: summary),
-                          
+
                           // Section header
                           Padding(
                             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -175,32 +181,39 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).colorScheme.onSurface,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
                                   ),
                                 ),
                                 Text(
                                   '${holdings.length} ${holdings.length == 1 ? 'coin' : 'coins'}',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.6),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          
+
                           // Holdings list
                           ...holdings.map((holding) {
                             // Get real-time price stream for this holding
-                            final priceStream = _controller.getPriceStream(holding.symbol);
-                            
+                            final priceStream = _controller.getPriceStream(
+                              holding.symbol,
+                            );
+
                             return HoldingCard(
                               holding: holding,
                               priceStream: priceStream,
                               onTap: () => _navigateToHoldingDetail(holding),
                             );
                           }),
-                          
+
                           // Bottom spacing
                           const SizedBox(height: 16),
                         ],
@@ -209,14 +222,14 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
           };
         },
       ),
-      
+
       // Floating Action Button - Primary action button
       floatingActionButton: ValueListenableBuilder<PortfolioState>(
         valueListenable: _controller,
         builder: (context, state, child) {
           // Only show FAB when portfolio is loaded
           if (state is! PortfolioLoaded) return const SizedBox.shrink();
-          
+
           return FloatingActionButton.extended(
             // FloatingActionButton.extended - FAB with icon and label
             onPressed: _showAddHoldingDialog,
@@ -231,52 +244,60 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   }
 
   // Navigate to holding detail screen
-  void _navigateToHoldingDetail(holding) {
-    // TODO: Implement navigation to holding detail screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('View details for ${holding.symbol}'),
-        duration: const Duration(seconds: 1),
+  void _navigateToHoldingDetail(Holding holding) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HoldingDetailScreen(
+          holding: holding,
+          onEdit: () {
+            // TODO: Implement edit
+            Navigator.pop(context);
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Edit coming soon')));
+          },
+          onDelete: () async {
+            final messenger = ScaffoldMessenger.of(context);
+            Navigator.pop(context);
+            await _controller.deleteHolding(holding.id);
+            if (mounted) {
+              messenger.showSnackBar(
+                SnackBar(content: Text('${holding.symbol} deleted')),
+              );
+            }
+          },
+
+          onAddTransaction: () {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Add transaction coming soon')),
+            );
+          },
+        ),
       ),
     );
   }
 
   // Show dialog to add new holding
-  void _showAddHoldingDialog() {
-    // showDialog - Displays modal dialog over current screen
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Holding'),
-        content: const Text(
-          'Add holding form will be implemented here.\n\n'
-          'You will be able to:\n'
-          '• Search for coins\n'
-          '• Enter quantity\n'
-          '• Set average buy price\n'
-          '• Add notes',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Implement add holding logic
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Add holding form coming soon')),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
+void _showAddHoldingDialog() {
+  showDialog(
+    context: context,
+    builder: (context) => AddHoldingDialog(
+      onAdd: (holding) async {
+        final messenger = ScaffoldMessenger.of(context);
+        await _controller.addHolding(holding);
+        if (mounted) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text('${holding.symbol} added successfully'),
+              backgroundColor: AppColors.bullish,
             ),
-            child: const Text('Add'),
-          ),
-        ],
-      ),
-    );
-  }
+          );
+        }
+      },
+    ),
+  );
+}
+
 }

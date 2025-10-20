@@ -1,5 +1,5 @@
 // Why: Shows when user has no holdings yet, encourages first action
-// Flutter Concepts: Center, Column, Icon, ElevatedButton
+// Flutter Concepts: SingleChildScrollView to prevent overflow
 // UX: Friendly empty state with clear call-to-action
 
 import 'package:flutter/material.dart';
@@ -12,46 +12,47 @@ class EmptyPortfolioWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      // Center - Centers child widget in available space
+    return SingleChildScrollView(
+      // SingleChildScrollView - Makes content scrollable to prevent overflow
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, // Center vertically
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 40), // Top spacing
+            
             // Large icon
             Icon(
               Icons.account_balance_wallet_outlined,
-              size: 80,
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
+              size: 64,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             // Title
             Text(
               'No Holdings Yet',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
 
             // Description
             Text(
-              'Start building your crypto portfolio by adding your first holding',
+              'Start building your crypto portfolio',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
 
             // Call-to-action button
             ElevatedButton.icon(
-              // ElevatedButton - Material Design raised button
               onPressed: onAddHolding,
               icon: const Icon(Icons.add),
               label: const Text('Add First Holding'),
@@ -69,13 +70,15 @@ class EmptyPortfolioWidget extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Tips section
+            // Tips section - Compact
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,28 +87,28 @@ class EmptyPortfolioWidget extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.lightbulb_outline,
-                        size: 20,
+                        size: 18,
                         color: AppColors.primary,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Getting Started',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.bold,
                           color: AppColors.primary,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  _buildTip('Track your crypto investments in one place'),
-                  _buildTip('Monitor real-time profit and loss'),
-                  _buildTip('Record all your transactions'),
-                  _buildTip('Set price alerts on watchlist'),
+                  const SizedBox(height: 10),
+                  _buildTip('Track crypto investments'),
+                  _buildTip('Monitor real-time P/L'),
+                  _buildTip('Record transactions'),
                 ],
               ),
             ),
+            const SizedBox(height: 40), // Bottom spacing
           ],
         ),
       ),
@@ -114,12 +117,17 @@ class EmptyPortfolioWidget extends StatelessWidget {
 
   Widget _buildTip(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          const Icon(Icons.check_circle, size: 16, color: AppColors.bullish),
+          const Icon(Icons.check_circle, size: 14, color: AppColors.bullish),
           const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 12))),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 11),
+            ),
+          ),
         ],
       ),
     );
