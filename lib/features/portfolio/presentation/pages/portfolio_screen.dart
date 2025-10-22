@@ -10,8 +10,10 @@ import 'package:tradegenius/features/portfolio/presentation/pages/holding_detail
 import 'package:tradegenius/features/portfolio/presentation/pages/watchlist_screen.dart';
 import 'package:tradegenius/features/portfolio/presentation/widgets/add_holding_dialog.dart'
     show AddHoldingDialog;
+import 'package:tradegenius/features/portfolio/presentation/widgets/allocation_chart.dart';
 import 'package:tradegenius/features/portfolio/presentation/widgets/edit_holding_dialog.dart'
     show EditHoldingDialog;
+import 'package:tradegenius/features/portfolio/presentation/widgets/portfolio_stats_row.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../application/portfolio_controller.dart';
 import '../../application/portfolio_state.dart';
@@ -176,6 +178,13 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                         children: [
                           // Portfolio summary at top
                           PortfolioSummaryCard(summary: summary),
+                          // NEW: Portfolio stats row
+                          const SizedBox(height: 8),
+                          PortfolioStatsRow(holdings: holdings),
+
+                          // NEW: Allocation chart
+                          if (holdings.length > 1)
+                            AllocationChart(holdings: holdings),
 
                           // Section header
                           Padding(
