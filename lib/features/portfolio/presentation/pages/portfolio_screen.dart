@@ -3,10 +3,12 @@
 // UX: Pull-to-refresh, real-time updates, smooth loading states, easy navigation
 
 import 'package:flutter/material.dart';
+import 'package:tradegenius/features/portfolio/application/strategy_controller.dart';
 import 'package:tradegenius/features/portfolio/domain/entities/holding.dart'
     show Holding;
 import 'package:tradegenius/features/portfolio/presentation/pages/holding_detail_screen.dart'
     show HoldingDetailScreen;
+import 'package:tradegenius/features/portfolio/presentation/pages/strategies_screen.dart';
 import 'package:tradegenius/features/portfolio/presentation/pages/watchlist_screen.dart';
 import 'package:tradegenius/features/portfolio/presentation/widgets/add_holding_dialog.dart'
     show AddHoldingDialog;
@@ -95,6 +97,26 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const WatchlistScreen(),
+                ),
+              );
+            },
+          ),
+
+          IconButton(
+            icon: const Icon(Icons.lightbulb_outline),
+            tooltip: 'Trading Strategies',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => StrategiesScreen(
+                    controller: StrategyController(
+                      PortfolioRepositoryImpl(
+                        supabaseDatasource: PortfolioSupabaseDatasource(),
+                        binanceDatasource: BinanceDatasource(),
+                      ),
+                    ),
+                  ),
                 ),
               );
             },
