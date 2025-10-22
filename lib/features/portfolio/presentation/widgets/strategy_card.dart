@@ -1,6 +1,6 @@
 // Why: Displays individual strategy with status, prices, and risk/reward
-// Flutter Concepts: Card, InkWell (tap ripple), Chip (status badge), Row/Column layout
-// UX: Color-coded status, swipe-to-delete gesture, tap to edit
+// Flutter Concepts: Card, InkWell, Wrap (prevents overflow), Flexible sizing
+// UX: Color-coded status, swipe-to-delete, responsive layout
 
 import 'package:flutter/material.dart';
 import '../../domain/entities/trading_strategy.dart';
@@ -21,9 +21,8 @@ class StrategyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dismissible(
-      // Dismissible - Swipe-to-delete gesture (Material Design pattern)
       key: Key(strategy.id),
-      direction: DismissDirection.endToStart, // Swipe left only
+      direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
@@ -31,7 +30,6 @@ class StrategyCard extends StatelessWidget {
         child: const Icon(Icons.delete, color: Colors.white),
       ),
       confirmDismiss: (direction) async {
-        // Show confirmation dialog before deleting
         return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
@@ -54,7 +52,6 @@ class StrategyCard extends StatelessWidget {
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: InkWell(
-          // InkWell - Adds Material ripple effect on tap
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
           child: Padding(
@@ -64,52 +61,56 @@ class StrategyCard extends StatelessWidget {
               children: [
                 // Header: Title + Status
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
+                      // Expanded - Takes remaining space, prevents overflow
                       child: Text(
                         strategy.title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    const SizedBox(width: 8),
                     _buildStatusChip(strategy.status),
                   ],
                 ),
-
+                
                 if (strategy.symbol != null) ...[
                   const SizedBox(height: 8),
                   Text(
                     strategy.symbol!,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: AppColors.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
-
+                
                 if (strategy.description != null) ...[
                   const SizedBox(height: 8),
                   Text(
                     strategy.description!,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
-
-                // Price levels (if available)
-                if (strategy.entryPrice != null ||
-                    strategy.targetPrice != null ||
+                
+                // Price levels with Wrap (prevents overflow)
+                if (strategy.entryPrice != null || 
+                    strategy.targetPrice != null || 
                     strategy.stopLoss != null) ...[
                   const SizedBox(height: 12),
-                  Row(
+                  Wrap(
+                    // Wrap - Automatically wraps children to next line when space runs out
+                    spacing: 8, // Horizontal spacing between chips
+                    runSpacing: 8, // Vertical spacing between rows
                     children: [
                       if (strategy.entryPrice != null)
                         _buildPriceChip('Entry', strategy.entryPrice!, Colors.blue),
@@ -120,31 +121,34 @@ class StrategyCard extends StatelessWidget {
                     ],
                   ),
                 ],
-
+                
                 // Risk/Reward ratio
                 if (strategy.riskRewardRatio != null) ...[
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.analytics, size: 16,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
+                      Icon(
+                        Icons.analytics,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'R:R ${strategy.riskRewardRatio!.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                            ),
                       ),
                     ],
                   ),
                 ],
-
+                
                 // Tags
                 if (strategy.tags.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
+                    runSpacing: 4,
                     children: strategy.tags.map((tag) => Chip(
                       label: Text(tag, style: const TextStyle(fontSize: 11)),
                       padding: EdgeInsets.zero,
@@ -189,8 +193,8 @@ class StrategyCard extends StatelessWidget {
   }
 
   Widget _buildPriceChip(String label, double price, Color color) {
+    // Flexible sizing - adapts to content, prevents overflow
     return Container(
-      margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
