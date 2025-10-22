@@ -4,7 +4,8 @@
 
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:tradegenius/features/market/data/datasources/binance_datasource.dart' show BinanceDatasource;
+import 'package:tradegenius/features/market/data/datasources/binance_datasource.dart'
+    show BinanceDatasource;
 import '../../portfolio/domain/entities/watchlist_item.dart';
 import '../../portfolio/domain/entities/portfolio_result.dart';
 import '../../portfolio/domain/repositories/portfolio_repository.dart';
@@ -18,7 +19,7 @@ class WatchlistController extends ValueNotifier<WatchlistState> {
   final Map<String, StreamSubscription> _streamSubscriptions = {};
 
   WatchlistController(this._repository, this._binanceDatasource)
-      : super(const WatchlistInitial());
+    : super(const WatchlistInitial());
 
   Future<void> loadWatchlist() async {
     value = const WatchlistLoading();
@@ -64,23 +65,27 @@ class WatchlistController extends ValueNotifier<WatchlistState> {
     }
   }
 
-  void _startPriceStreams(List<WatchlistItem> items) {
+  void _startPriceStreams(List items) {
     _stopAllStreams();
-
-    for (final item in items) {
+    final limitedItems = items.take(10);
+    for (final item in limitedItems) {
       final controller = StreamController<double>.broadcast();
       _priceStreams[item.symbol] = controller;
 
-      final subscription = _binanceDatasource.streamPrice(item.symbol).listen(
+      // Add debounce to reduce updates
+      final subscription = _binanceDatasource
+          .streamPrice(item.symbol)
+          .distinct() // Only emit when value changes
+          .listen(
             (price) {
-          if (!controller.isClosed) {
-            controller.add(price);
-          }
-        },
-        onError: (error) {
-          debugPrint('Stream error for ${item.symbol}: $error');
-        },
-      );
+              if (!controller.isClosed) {
+                controller.add(price);
+              }
+            },
+            onError: (error) {
+              debugPrint('Stream error for ${item.symbol}: $error');
+            },
+          );
 
       _streamSubscriptions[item.symbol] = subscription;
     }

@@ -86,7 +86,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                       color: Theme.of(context)
                           .colorScheme
                           .onSurface
-                          .withOpacity(0.6),
+                          .withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -122,19 +122,21 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                         color: Theme.of(context)
                             .colorScheme
                             .onSurface
-                            .withOpacity(0.6),
+                            .withValues(alpha: 0.6),
                       ),
                     ),
                   ),
                   ...items.map((item) {
-                    final priceStream =
-                    _controller.getPriceStream(item.symbol);
+                    final priceStream = _controller.getPriceStream(item.symbol);
 
-                    return WatchlistCard(
-                      item: item,
-                      priceStream: priceStream,
-                      onRemove: () => _handleRemove(item),
-                      onEdit: () => _showEditWatchlistDialog(item),
+                    return RepaintBoundary(
+                      key: ValueKey(item.id),
+                      child: WatchlistCard(
+                        item: item,
+                        priceStream: priceStream,
+                        onRemove: () => _handleRemove(item),
+                        onEdit: () => _showEditWatchlistDialog(item),
+                      ),
                     );
                   }),
                 ],

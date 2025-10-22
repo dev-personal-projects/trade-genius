@@ -162,29 +162,33 @@ class PortfolioController extends ValueNotifier<PortfolioState> {
     }
   }
 
-  void _startPriceStreams(List<Holding> holdings) {
-    _stopAllStreams();
+void _startPriceStreams(List items) {
+  _stopAllStreams();
+  // Limit to first 10 items to reduce load
+  final limitedItems = items.take(10);
+  for (final item in limitedItems) {
+    final controller = StreamController<double>.broadcast();
+    _priceStreams[item.symbol] = controller;
 
-    for (final holding in holdings) {
-      final controller = StreamController<double>.broadcast();
-      _priceStreams[holding.symbol] = controller;
+    // Add debounce to reduce updates
+    final subscription = _binanceDatasource
+        .streamPrice(item.symbol)
+        .distinct() // Only emit when value changes
+        .listen(
+      (price) {
+        if (!controller.isClosed) {
+          controller.add(price);
+        }
+      },
+      onError: (error) {
+        debugPrint('Stream error for ${item.symbol}: $error');
+      },
+    );
 
-      final subscription = _binanceDatasource
-          .streamPrice(holding.symbol)
-          .listen(
-            (price) {
-              if (!controller.isClosed) {
-                controller.add(price);
-              }
-            },
-            onError: (error) {
-              debugPrint('Stream error for ${holding.symbol}: $error');
-            },
-          );
-
-      _streamSubscriptions[holding.symbol] = subscription;
-    }
+    _streamSubscriptions[item.symbol] = subscription;
   }
+}
+
 
   Stream<double>? getPriceStream(String symbol) {
     return _priceStreams[symbol]?.stream;
@@ -192,12 +196,16 @@ class PortfolioController extends ValueNotifier<PortfolioState> {
 
   void _startAutoRefresh() {
     _refreshTimer?.cancel();
-    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (value is PortfolioLoaded) {
-        loadPortfolio();
-      }
-    });
+    _refreshTimer = Timer.periodic(
+      const Duration(minutes: 1), // Changed from 30 seconds to 1 minute
+          (_) {
+        if (value is PortfolioLoaded) {
+          loadPortfolio();
+        }
+      },
+    );
   }
+
 
   void _stopAllStreams() {
     for (final subscription in _streamSubscriptions.values) {
