@@ -7,6 +7,7 @@ import 'package:tradegenius/features/portfolio/domain/entities/holding.dart'
     show Holding;
 import 'package:tradegenius/features/portfolio/presentation/pages/holding_detail_screen.dart'
     show HoldingDetailScreen;
+import 'package:tradegenius/features/portfolio/presentation/pages/watchlist_screen.dart';
 import 'package:tradegenius/features/portfolio/presentation/widgets/add_holding_dialog.dart'
     show AddHoldingDialog;
 import 'package:tradegenius/features/portfolio/presentation/widgets/edit_holding_dialog.dart'
@@ -83,16 +84,20 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
               );
             },
           ),
+          // Replace the watchlist IconButton onPressed:
           IconButton(
             icon: const Icon(Icons.bookmark_outline),
             tooltip: 'Watchlist',
             onPressed: () {
-              // TODO: Navigate to watchlist screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Watchlist coming soon')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const WatchlistScreen(),
+                ),
               );
             },
           ),
+
         ],
       ),
 
