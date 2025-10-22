@@ -116,18 +116,16 @@ class PortfolioSupabaseDatasource {
   }
 
   Future<WatchlistItem> addToWatchlist(WatchlistItem item) async {
-    final data = await _client
-        .from('watchlist')
-        .insert({
-          'user_id': _userId,
-          'symbol': item.symbol,
-          'coin_name': item.coinName,
-          'target_price': item.targetPrice,
-          'alert_enabled': item.alertEnabled,
-          'notes': item.notes,
-        })
-        .select()
-        .single();
+    final data = await _client.from('watchlist').insert({
+      'user_id': _userId,
+      'symbol': item.symbol,
+      'coin_name': item.coinName,
+      'target_price_low': item.targetPriceLow,
+      'target_price_high': item.targetPriceHigh,
+      'alert_enabled': item.alertEnabled,
+      'alarm_sound_path': item.alarmSoundPath,
+      'notes': item.notes,
+    }).select().single();
 
     return _mapToWatchlistItem(data);
   }
@@ -144,10 +142,12 @@ class PortfolioSupabaseDatasource {
     final data = await _client
         .from('watchlist')
         .update({
-          'target_price': item.targetPrice,
-          'alert_enabled': item.alertEnabled,
-          'notes': item.notes,
-        })
+      'target_price_low': item.targetPriceLow,
+      'target_price_high': item.targetPriceHigh,
+      'alert_enabled': item.alertEnabled,
+      'alarm_sound_path': item.alarmSoundPath,
+      'notes': item.notes,
+    })
         .eq('id', item.id)
         .eq('user_id', _userId)
         .select()
@@ -254,15 +254,18 @@ class PortfolioSupabaseDatasource {
       userId: json['user_id'],
       symbol: json['symbol'],
       coinName: json['coin_name'],
-      targetPrice: json['target_price'] != null
-          ? (json['target_price'] as num).toDouble()
+      targetPriceLow: json['target_price_low'] != null
+          ? (json['target_price_low'] as num).toDouble()
+          : null,
+      targetPriceHigh: json['target_price_high'] != null
+          ? (json['target_price_high'] as num).toDouble()
           : null,
       alertEnabled: json['alert_enabled'] ?? false,
+      alarmSoundPath: json['alarm_sound_path'],
       notes: json['notes'],
       createdAt: DateTime.parse(json['created_at']),
     );
   }
-
   TradingStrategy _mapToStrategy(Map<String, dynamic> json) {
     return TradingStrategy(
       id: json['id'],

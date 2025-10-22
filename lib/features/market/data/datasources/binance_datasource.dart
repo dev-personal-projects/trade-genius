@@ -22,9 +22,7 @@ class BinanceDatasource {
   // Fetch top coins with 24h ticker data
   Future<List<CryptoCoin>> getTopCoins({int limit = 200}) async {
     try {
-      final response = await _client.get(
-        Uri.parse('$_baseUrl/ticker/24hr'),
-      );
+      final response = await _client.get(Uri.parse('$_baseUrl/ticker/24hr'));
 
       if (response.statusCode != 200) {
         throw Exception('Failed to fetch coins: ${response.statusCode}');
@@ -52,11 +50,13 @@ class BinanceDatasource {
   }) async {
     try {
       final response = await _client.get(
-        Uri.parse('$_baseUrl/klines').replace(queryParameters: {
-          'symbol': '${symbol.toUpperCase()}USDT',
-          'interval': interval.binanceInterval,
-          'limit': limit.toString(),
-        }),
+        Uri.parse('$_baseUrl/klines').replace(
+          queryParameters: {
+            'symbol': '${symbol.toUpperCase()}USDT',
+            'interval': interval.binanceInterval,
+            'limit': limit.toString(),
+          },
+        ),
       );
 
       if (response.statusCode != 200) {
@@ -86,15 +86,20 @@ class BinanceDatasource {
     required TimeInterval interval,
   }) async {
     try {
-      final limit = interval == TimeInterval.hour24 ? 24 :
-      interval == TimeInterval.days7 ? 42 : 30;
+      final limit = interval == TimeInterval.hour24
+          ? 24
+          : interval == TimeInterval.days7
+          ? 42
+          : 30;
 
       final response = await _client.get(
-        Uri.parse('$_baseUrl/klines').replace(queryParameters: {
-          'symbol': '${symbol.toUpperCase()}USDT',
-          'interval': interval.binanceInterval,
-          'limit': limit.toString(),
-        }),
+        Uri.parse('$_baseUrl/klines').replace(
+          queryParameters: {
+            'symbol': '${symbol.toUpperCase()}USDT',
+            'interval': interval.binanceInterval,
+            'limit': limit.toString(),
+          },
+        ),
       );
 
       if (response.statusCode != 200) {
@@ -120,13 +125,17 @@ class BinanceDatasource {
       Uri.parse('$_wsUrl/${symbol.toLowerCase()}usdt@trade'),
     );
 
-    return channel.stream.map((data) {
-      final json = jsonDecode(data);
-      return double.parse(json['p']);
-    }).handleError((error) {
-      channel.sink.close();
-      throw Exception('WebSocket error: $error');
-    });
+    return channel.stream
+        .map((data) {
+          final json = jsonDecode(data);
+          return double.parse(json['p']);
+        })
+        .distinct() // Remove duplicates
+        .cast<double>() // Cast to ensure type safety
+        .handleError((error) {
+          channel.sink.close();
+          throw Exception('WebSocket error: $error');
+        });
   }
 
   CryptoCoin _mapToCryptoCoin(Map<String, dynamic> json) {
