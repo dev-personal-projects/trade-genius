@@ -9,6 +9,8 @@ import 'package:tradegenius/features/portfolio/presentation/pages/holding_detail
     show HoldingDetailScreen;
 import 'package:tradegenius/features/portfolio/presentation/widgets/add_holding_dialog.dart'
     show AddHoldingDialog;
+import 'package:tradegenius/features/portfolio/presentation/widgets/edit_holding_dialog.dart'
+    show EditHoldingDialog;
 import '../../../../core/theme/app_theme.dart';
 import '../../application/portfolio_controller.dart';
 import '../../application/portfolio_state.dart';
@@ -251,11 +253,8 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
         builder: (context) => HoldingDetailScreen(
           holding: holding,
           onEdit: () {
-            // TODO: Implement edit
-            Navigator.pop(context);
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Edit coming soon')));
+            Navigator.pop(context); // Close detail screen
+            _showEditHoldingDialog(holding); // Show edit dialog
           },
           onDelete: () async {
             final messenger = ScaffoldMessenger.of(context);
@@ -267,7 +266,6 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
               );
             }
           },
-
           onAddTransaction: () {
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
@@ -279,25 +277,45 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
     );
   }
 
-  // Show dialog to add new holding
-void _showAddHoldingDialog() {
-  showDialog(
-    context: context,
-    builder: (context) => AddHoldingDialog(
-      onAdd: (holding) async {
-        final messenger = ScaffoldMessenger.of(context);
-        await _controller.addHolding(holding);
-        if (mounted) {
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text('${holding.symbol} added successfully'),
-              backgroundColor: AppColors.bullish,
-            ),
-          );
-        }
-      },
-    ),
-  );
-}
+  void _showEditHoldingDialog(Holding holding) {
+    showDialog(
+      context: context,
+      builder: (context) => EditHoldingDialog(
+        holding: holding,
+        onUpdate: (updatedHolding) async {
+          final messenger = ScaffoldMessenger.of(context);
+          await _controller.updateHolding(updatedHolding);
+          if (mounted) {
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text('${updatedHolding.symbol} updated successfully'),
+                backgroundColor: AppColors.bullish,
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
 
+  // Show dialog to add new holding
+  void _showAddHoldingDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AddHoldingDialog(
+        onAdd: (holding) async {
+          final messenger = ScaffoldMessenger.of(context);
+          await _controller.addHolding(holding);
+          if (mounted) {
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text('${holding.symbol} added successfully'),
+                backgroundColor: AppColors.bullish,
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
 }
