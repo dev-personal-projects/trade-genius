@@ -34,7 +34,7 @@ class HoldingDetailScreen extends StatelessWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         children: [
           // Holding summary card
           Card(

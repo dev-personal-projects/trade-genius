@@ -21,7 +21,7 @@ class AddHoldingDialog extends StatefulWidget {
 class _AddHoldingDialogState extends State<AddHoldingDialog> {
   // Form key - Used to validate all form fields at once
   final _formKey = GlobalKey<FormState>();
-
+  
   // Text controllers - Manage text input state
   final _quantityController = TextEditingController();
   final _priceController = TextEditingController();
