@@ -255,7 +255,7 @@ class _AddWatchlistDialogState extends State<AddWatchlistDialog> {
                   },
                   title: const Text('Enable Price Alert'),
                   subtitle: const Text('Notify when target is reached'),
-                  activeColor: AppColors.primary,
+                  activeThumbColor: AppColors.primary,
                   contentPadding: EdgeInsets.zero,
                 ),
 

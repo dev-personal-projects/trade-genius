@@ -178,7 +178,7 @@ class _AddStrategyDialogState extends State<AddStrategyDialog> {
 
                   // Status dropdown
                   DropdownButtonFormField<StrategyStatus>(
-                    value: _status,
+                    initialValue: _status,
                     decoration: const InputDecoration(
                       labelText: 'Status',
                       prefixIcon: Icon(Icons.flag),
