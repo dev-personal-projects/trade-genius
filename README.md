@@ -722,3 +722,33 @@ Contributions welcome! Please read CONTRIBUTING.md first.
 ---
 
 **Built with ❤️ using Flutter**
+
+chat/
+├── domain/
+│   ├── entities/
+│   │   ├── chat_message.dart           ✅ Core message model
+│   │   ├── chat_session.dart           ✅ Conversation grouping
+│   │   └── ai_response.dart            ✅ OpenAI response wrapper
+│   ├── repositories/
+│   │   └── chat_repository.dart        ✅ Data contract
+│   └── usecases/
+│       └── send_message_usecase.dart   ✅ Single use case
+├── data/
+│   ├── datasources/
+│   │   ├── openai_datasource.dart      ✅ OpenAI API integration
+│   │   └── chat_storage_datasource.dart ✅ Supabase storage
+│   ├── repositories/
+│   │   └── chat_repository_impl.dart   ✅ Implementation
+│   └── models/
+│       ├── chat_message_model.dart     ✅ Data model
+│       └── openai_request_model.dart   ✅ API request model
+├── application/
+│   ├── chat_controller.dart            ✅ State management
+│   └── chat_state.dart                 ✅ State definitions
+└── presentation/
+    ├── pages/
+    │   └── chat_screen.dart            ✅ Single chat interface
+    └── widgets/
+        ├── message_bubble.dart         ✅ Chat UI
+        ├── typing_indicator.dart       ✅ AI thinking animation
+        └── animated_price_widget.dart  ✅ Live price integration

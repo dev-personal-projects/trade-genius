@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:tradegenius/core/navigation/bottom_nav_bar.dart';
-import '../../features/portfolio/presentation/pages/portfolio_screen.dart';
+import '../navigation/bottom_nav_bar.dart';
 import '../../features/market/presentation/pages/market_screen.dart';
+import '../../features/portfolio/presentation/pages/portfolio_screen.dart';
 import '../../features/chat/presentation/pages/chat_screen.dart';
 import '../../features/profile/presentation/pages/profile_screen.dart';
 
@@ -18,8 +18,9 @@ class _AppScaffoldState extends State<AppScaffold> {
   final List<Widget> _screens = const [
     MarketScreen(),
     PortfolioScreen(),
-
     ChatScreen(),
+
+    
     ProfileScreen(),
   ];
 

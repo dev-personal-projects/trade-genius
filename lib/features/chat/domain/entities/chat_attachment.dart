@@ -1,1 +1,0 @@
-//Images, charts, documents
