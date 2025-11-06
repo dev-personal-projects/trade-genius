@@ -1,103 +1,92 @@
+/*
+ * CHAT STORAGE - Supabase Database Integration
+ * 
+ * PURPOSE: Save and retrieve chat messages from Supabase database
+ * 
+ * KEY CONCEPTS:
+ * - Supabase: Backend-as-a-Service (like Firebase)
+ * - PostgreSQL: SQL database used by Supabase
+ * - CRUD: Create, Read, Update, Delete operations
+ */
+
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/chat_message_model.dart';
-import '../../domain/entities/chat_session.dart';
+import '../../domain/entities/chat_message.dart';
 
 class ChatStorageDataSource {
-  final SupabaseClient _client;
+  // Get Supabase client instance
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  ChatStorageDataSource(this._client);
-
-  Future<ChatSession> createSession(String userId) async {
-    final session = {
-      'id': DateTime.now().millisecondsSinceEpoch.toString(),
-      'user_id': userId,
-      'title': 'New Chat',
-      'created_at': DateTime.now().toIso8601String(),
-      'updated_at': DateTime.now().toIso8601String(),
-      'message_count': 0,
-    };
-
-    await _client.from('chat_sessions').insert(session);
-
-    return ChatSession(
-      id: session['id'] as String,
-      userId: session['user_id'] as String,
-      title: session['title'] as String,
-      createdAt: DateTime.parse(session['created_at'] as String),
-      updatedAt: DateTime.parse(session['updated_at'] as String),
-      messageCount: session['message_count'] as int,
-    );
+  // Save message to database
+  // Returns: true if successful, false if failed
+  Future<bool> saveMessage(ChatMessage message) async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      await _supabase.from('chat_messages').insert({
+        'id': message.id,
+        'session_id': message.sessionId,
+        'role': message.role.name,
+        'content': message.content,
+        'timestamp': message.timestamp.toIso8601String(),
+        'metadata': message.metadata,
+        'user_id': userId,
+      });
+      return true;
+    } catch (e) {
+      print('Error saving message: $e');
+      return false;
+    }
   }
 
-  Future<List<ChatSession>> getUserSessions(String userId) async {
-    final response = await _client
-        .from('chat_sessions')
-        .select()
-        .eq('user_id', userId)
-        .order('updated_at', ascending: false);
+  // Get all messages for a specific session
+  // Returns: List of ChatMessage objects
+  Future<List<ChatMessage>> getSessionMessages(String sessionId) async {
+    try {
+      final response = await _supabase
+          .from('chat_messages')
+          .select()
+          .eq('session_id', sessionId)
+          .order('timestamp', ascending: true);
 
-    return response
-        .map<ChatSession>(
-          (json) => ChatSession(
-            id: json['id'] as String,
-            userId: json['user_id'] as String,
-            title: json['title'] as String,
-            createdAt: DateTime.parse(json['created_at'] as String),
-            updatedAt: DateTime.parse(json['updated_at'] as String),
-            messageCount: (json['message_count'] as int?) ?? 0,
-          ),
-        )
-        .toList();
-  }
-
-  Future<void> saveMessage(ChatMessageModel message) async {
-    await _client.from('chat_messages').insert(message.toJson());
-
-    // Update session
-    await _client
-        .from('chat_sessions')
-        .update({
-          'updated_at': DateTime.now().toIso8601String(),
-          'message_count': await _getMessageCount(message.sessionId),
-        })
-        .eq('id', message.sessionId);
-  }
-
-  Future<List<ChatMessageModel>> getSessionMessages(String sessionId) async {
-    final response = await _client
-        .from('chat_messages')
-        .select()
-        .eq('session_id', sessionId)
-        .order('timestamp', ascending: true);
-
-    return response
-        .map<ChatMessageModel>((json) => ChatMessageModel.fromJson(json))
-        .toList();
-  }
-
-  Stream<List<ChatMessageModel>> watchSessionMessages(String sessionId) {
-    return _client
-        .from('chat_messages')
-        .stream(primaryKey: ['id'])
-        .eq('session_id', sessionId)
-        .order('timestamp')
-        .map(
-          (data) => data
-              .map<ChatMessageModel>((json) => ChatMessageModel.fromJson(json))
-              .toList(),
+      return (response as List).map((json) {
+        return ChatMessage(
+          id: json['id'],
+          sessionId: json['session_id'],
+          role: json['role'] == 'user' ? MessageRole.user : MessageRole.assistant,
+          content: json['content'],
+          timestamp: DateTime.parse(json['timestamp']),
+          metadata: json['metadata'],
         );
+      }).toList();
+    } catch (e) {
+      print('Error loading messages: $e');
+      return [];
+    }
   }
 
-  Future<void> deleteSession(String sessionId) async {
-    await _client.from('chat_messages').delete().eq('session_id', sessionId);
-    await _client.from('chat_sessions').delete().eq('id', sessionId);
+  // Get all conversation sessions
+  // Returns: List of session summaries with message count
+  Future<List<Map<String, dynamic>>> getAllSessions() async {
+    try {
+      // SQL query to get sessions with message count and first message
+      final response = await _supabase.rpc('get_chat_sessions');
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error loading sessions: $e');
+      return [];
+    }
   }
 
-  Future<int> _getMessageCount(String sessionId) async {
-    final response = await _client
-        .from('chat_messages')
-        .select('id')
-        .eq('session_id', sessionId);
-    return response.length;
+  // Delete a conversation session and all its messages
+  Future<bool> deleteSession(String sessionId) async {
+    try {
+      await _supabase
+          .from('chat_messages')
+          .delete()
+          .eq('session_id', sessionId);
+      return true;
+    } catch (e) {
+      print('Error deleting session: $e');
+      return false;
+    }
   }
 }

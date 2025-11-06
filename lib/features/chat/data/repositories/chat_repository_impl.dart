@@ -14,13 +14,33 @@ class ChatRepositoryImpl implements ChatRepository {
   ChatRepositoryImpl(this._azureAIDataSource, this._storageDataSource);
 
   @override
-  Future<ChatSession> createSession(String userId) {
-    return _storageDataSource.createSession(userId);
+  Future<ChatSession> createSession(String userId) async {
+    // Create new session with timestamp as ID
+    final sessionId = DateTime.now().millisecondsSinceEpoch.toString();
+    return ChatSession(
+      id: sessionId,
+      userId: userId,
+      title: 'New Conversation',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
   }
 
   @override
-  Future<List<ChatSession>> getUserSessions(String userId) {
-    return _storageDataSource.getUserSessions(userId);
+  Future<List<ChatSession>> getUserSessions(String userId) async {
+    final sessions = await _storageDataSource.getAllSessions();
+    return sessions
+        .map(
+          (json) => ChatSession(
+            id: json['session_id'],
+            userId: userId,
+            title: json['first_message'] ?? 'Conversation',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.parse(json['last_timestamp']),
+            messageCount: json['message_count'] ?? 0,
+          ),
+        )
+        .toList();
   }
 
   @override
@@ -41,10 +61,10 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Stream<List<ChatMessage>> watchSessionMessages(String sessionId) {
-    return _storageDataSource
-        .watchSessionMessages(sessionId)
-        .map((models) => models.cast<ChatMessage>());
+  Stream<List<ChatMessage>> watchSessionMessages(String sessionId) async* {
+    // Convert Future to Stream for real-time updates
+    final messages = await _storageDataSource.getSessionMessages(sessionId);
+    yield messages;
   }
 
   @override
@@ -66,10 +86,7 @@ class ChatRepositoryImpl implements ChatRepository {
     List<ChatMessage> context,
   ) {
     final messages = <AzureMessage>[
-      const AzureMessage(
-        role: 'system',
-        content: _systemPrompt,
-      ),
+      const AzureMessage(role: 'system', content: _systemPrompt),
     ];
 
     // Add recent context (last 10 messages)
