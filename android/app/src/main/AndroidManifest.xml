@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission android:name="android.permission.CAMERA"/>
     <application
-        android:label="tradegenius"
+        android:label="TradeGenius"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
