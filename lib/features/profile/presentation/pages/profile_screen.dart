@@ -3,42 +3,134 @@
  * PROFILE SCREEN - Complete User Profile & Settings
  * ═══════════════════════════════════════════════════════════════════════════
  * 
- * 📚 COMPREHENSIVE LEARNING GUIDE
- * 
- * This screen demonstrates professional Flutter development with:
- * - SOLID principles (Single Responsibility, Open/Closed, etc.)
- * - CUPID principles (Composable, Unix philosophy, Predictable, etc.)
- * - Clean architecture
- * - Proper separation of concerns
+ * 📚 COMPREHENSIVE FLUTTER/DART LEARNING GUIDE
  * 
  * ═══════════════════════════════════════════════════════════════════════════
- * FEATURES:
+ * 🎯 STATE MANAGEMENT CONCEPTS DEMONSTRATED
  * ═══════════════════════════════════════════════════════════════════════════
  * 
- * ✅ Enhanced Profile Header
- *    - Gradient background
- *    - Profile picture upload (camera/gallery)
- *    - Tappable to edit
+ * This screen showcases MULTIPLE state management approaches:
  * 
- * ✅ Theme Mode Selector
- *    - Light/Dark/System modes
- *    - Persisted preference
- *    - Smooth transitions
+ * 1️⃣ **STATEFUL WIDGET (Built-in Flutter)**
+ *    ✅ WHAT: Widget that can change its internal state
+ *    ✅ WHEN: Simple local state (toggles, form inputs, UI state)
+ *    ✅ WHY: Built-in, no dependencies, perfect for component-level state
+ *    ✅ HOW: setState() triggers rebuild of widget tree
+ *    
+ *    Example in this file:
+ *    - _notificationsEnabled (toggle state)
+ *    - _biometricsEnabled (toggle state)
+ *    - _language (dropdown selection)
+ *    - _profileImagePath (image picker result)
  * 
- * ✅ Settings Management
- *    - Notifications toggle
- *    - Biometric authentication toggle
- *    - Language selection
+ * 2️⃣ **VALUE NOTIFIER (Built-in Flutter)**
+ *    ✅ WHAT: Lightweight observable that notifies listeners of changes
+ *    ✅ WHEN: Simple state that multiple widgets need to observe
+ *    ✅ WHY: More efficient than setState for cross-widget communication
+ *    ✅ HOW: ValueListenableBuilder automatically rebuilds when value changes
+ *    
+ *    Example in this file:
+ *    - ThemeService extends ValueNotifier<ThemeMode>
+ *    - LocalizationService extends ValueNotifier<String>
+ *    - AuthController extends ValueNotifier<AuthState>
  * 
- * ✅ Account Actions
- *    - Edit profile
- *    - Change password
- *    - Security settings
+ * 3️⃣ **CHANGE NOTIFIER (Built-in Flutter)**
+ *    ✅ WHAT: Base class for objects that provide change notifications
+ *    ✅ WHEN: Complex state with multiple properties
+ *    ✅ WHY: More flexible than ValueNotifier, can notify without value change
+ *    ✅ HOW: notifyListeners() triggers all registered listeners
  * 
- * ✅ App Information
- *    - Version
- *    - About
- *    - Privacy & Terms
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 🚀 POPULAR STATE MANAGEMENT SOLUTIONS COMPARISON
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * 📦 **PROVIDER (Most Popular)**
+ *    ✅ PROS: Easy to learn, built on InheritedWidget, great for beginners
+ *    ✅ CONS: Can become complex with nested providers
+ *    ✅ BEST FOR: Small to medium apps, learning Flutter
+ *    ✅ SYNTAX: Consumer<T>, Provider.of<T>(context)
+ * 
+ * 📦 **RIVERPOD (Provider 2.0)**
+ *    ✅ PROS: Compile-time safety, no BuildContext needed, better testing
+ *    ✅ CONS: Steeper learning curve, newer ecosystem
+ *    ✅ BEST FOR: Large apps, type safety, advanced developers
+ *    ✅ SYNTAX: ref.watch(), ref.read(), ConsumerWidget
+ * 
+ * 📦 **BLOC (Business Logic Component)**
+ *    ✅ PROS: Predictable state, great for complex apps, excellent testing
+ *    ✅ CONS: Boilerplate code, steeper learning curve
+ *    ✅ BEST FOR: Enterprise apps, complex business logic, team development
+ *    ✅ SYNTAX: BlocBuilder, BlocListener, context.read<Bloc>()
+ * 
+ * 📦 **GETX**
+ *    ✅ PROS: All-in-one solution (state + routing + dependency injection)
+ *    ✅ CONS: Magic strings, less predictable, tight coupling
+ *    ✅ BEST FOR: Rapid prototyping, small teams
+ *    ✅ SYNTAX: Get.find<Controller>(), Obx(() => widget)
+ * 
+ * 📦 **MOBX**
+ *    ✅ PROS: Reactive programming, automatic dependency tracking
+ *    ✅ CONS: Code generation required, runtime overhead
+ *    ✅ BEST FOR: Reactive UIs, developers familiar with MobX from other platforms
+ *    ✅ SYNTAX: @observable, @action, Observer(() => widget)
+ * 
+ * 📦 **REDUX**
+ *    ✅ PROS: Predictable state, time-travel debugging, great for large apps
+ *    ✅ CONS: Lots of boilerplate, complex setup
+ *    ✅ BEST FOR: Large apps with complex state, developers familiar with Redux
+ *    ✅ SYNTAX: StoreProvider, StoreConnector, dispatch(action)
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 🎯 WHY WE CHOSE VALUE NOTIFIER + STATEFUL WIDGET
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * ✅ **SIMPLICITY**: No external dependencies, built into Flutter
+ * ✅ **PERFORMANCE**: Minimal overhead, efficient rebuilds
+ * ✅ **LEARNING**: Great for understanding Flutter's reactive system
+ * ✅ **FLEXIBILITY**: Can easily migrate to Provider/Riverpod later
+ * ✅ **TESTING**: Easy to test, no complex setup required
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 🔧 FLUTTER CONCEPTS DEMONSTRATED
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * 🎨 **WIDGET LIFECYCLE**
+ *    - initState(): Initialize controllers, load settings
+ *    - dispose(): Clean up listeners, prevent memory leaks
+ *    - setState(): Trigger UI rebuilds for local state changes
+ * 
+ * 🎨 **ASYNC PROGRAMMING**
+ *    - Future<void>: Asynchronous operations (loading settings, API calls)
+ *    - async/await: Clean asynchronous code without callbacks
+ *    - mounted check: Prevent setState after widget disposal
+ * 
+ * 🎨 **REACTIVE UI PATTERNS**
+ *    - ValueListenableBuilder: Rebuilds when ValueNotifier changes
+ *    - StreamBuilder: Rebuilds when Stream emits new data
+ *    - FutureBuilder: Rebuilds based on Future states
+ * 
+ * 🎨 **NAVIGATION**
+ *    - GoRouter: Declarative routing with type safety
+ *    - context.go(): Navigate to named routes
+ *    - Route protection: Redirect unauthenticated users
+ * 
+ * 🎨 **DEPENDENCY INJECTION**
+ *    - Constructor injection: Pass dependencies through constructors
+ *    - Service locator pattern: Global access to services
+ *    - Singleton pattern: Single instance of services
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 📱 FEATURES IMPLEMENTED
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * ✅ Enhanced Profile Header with gradient background
+ * ✅ Theme Mode Selector (Light/Dark/System)
+ * ✅ Settings Management (Notifications, Biometrics, Language)
+ * ✅ Account Actions (Edit profile, Change password, Security)
+ * ✅ App Information (Version, About, Privacy & Terms)
+ * ✅ Biometric Authentication with device capability detection
+ * ✅ Multi-language support with real-time switching
+ * ✅ Persistent settings storage
  * 
  * ═══════════════════════════════════════════════════════════════════════════
  */
@@ -67,23 +159,83 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late final AuthController _authController;
-  late final SettingsDataSource _settingsDataSource;
-  late final ThemeService _themeService;
-  late final LocalizationService _localizationService;
-  late final BiometricService _biometricService;
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🎯 DEPENDENCY INJECTION - Constructor Injection Pattern
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 
+  // WHY late final?
+  // - late: Allows non-nullable initialization after constructor
+  // - final: Prevents reassignment, ensures immutability
+  // - Better than nullable fields that need null checks
+  // 
+  // ALTERNATIVE APPROACHES:
+  // 1. Constructor injection: Pass dependencies in constructor
+  // 2. Service locator: GetIt.instance<Service>()
+  // 3. Provider: Provider.of<Service>(context)
+  // 4. Riverpod: ref.read(serviceProvider)
+  // ═══════════════════════════════════════════════════════════════════════════
   
-  bool _notificationsEnabled = true;
-  bool _biometricsEnabled = false;
-  bool _biometricsAvailable = false;
-  String _language = 'English';
-  String? _profileImagePath;
+  late final AuthController _authController;           // Authentication state
+  late final SettingsDataSource _settingsDataSource;   // Local storage
+  late final ThemeService _themeService;               // Theme management
+  late final LocalizationService _localizationService; // Language management
+  late final BiometricService _biometricService;       // Biometric auth
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🎯 LOCAL STATE - StatefulWidget Pattern
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 
+  // These are component-level state that only this widget cares about.
+  // When these change, setState() is called to trigger a rebuild.
+  // 
+  // WHY StatefulWidget for these?
+  // - Simple boolean/string values
+  // - Only used within this widget
+  // - Don't need to share with other widgets
+  // - setState() is sufficient and performant
+  // 
+  // WHEN to use external state management instead?
+  // - When multiple widgets need the same state
+  // - When state needs to persist across navigation
+  // - When state logic is complex
+  // - When you need time-travel debugging
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  bool _notificationsEnabled = true;  // Toggle state for notifications
+  bool _biometricsEnabled = false;    // Toggle state for biometric login
+  bool _biometricsAvailable = false;  // Device capability detection
+  String _language = 'English';       // Selected language
+  String? _profileImagePath;          // Profile image file path
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🎯 WIDGET LIFECYCLE - initState()
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 
+  // WHAT: Called once when the widget is inserted into the widget tree
+  // WHEN: Perfect for one-time initialization (controllers, listeners, API calls)
+  // WHY: Ensures setup happens before first build()
+  // 
+  // LIFECYCLE ORDER:
+  // 1. Constructor
+  // 2. initState() ← We are here
+  // 3. didChangeDependencies()
+  // 4. build()
+  // 5. ... widget updates ...
+  // 6. dispose()
+  // 
+  // BEST PRACTICES:
+  // ✅ Always call super.initState() first
+  // ✅ Initialize controllers and listeners here
+  // ✅ Start async operations (but don't await them)
+  // ❌ Don't call setState() in initState()
+  // ❌ Don't access inherited widgets here (use didChangeDependencies instead)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
   @override
   void initState() {
-    super.initState();
-    _initializeServices();
-    _loadSettings();
+    super.initState(); // Always call super first!
+    _initializeServices();  // Set up dependency injection
+    _loadSettings();        // Load user preferences asynchronously
   }
 
   void _initializeServices() {
@@ -104,11 +256,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _biometricsAvailable = isSupported);
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🎯 ASYNC PROGRAMMING - Future & async/await
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 
+  // WHAT: Asynchronous function that loads user settings from local storage
+  // WHY async/await: Clean, readable code instead of callback hell
+  // 
+  // ASYNC CONCEPTS:
+  // - Future<T>: Represents a value that will be available later
+  // - async: Marks function as asynchronous
+  // - await: Waits for Future to complete before continuing
+  // 
+  // ALTERNATIVE APPROACHES:
+  // 1. Callbacks: loadSettings((result) => setState(...))
+  // 2. .then(): loadSettings().then((result) => setState(...))
+  // 3. async/await: Much cleaner! ✅
+  // 
+  // ERROR HANDLING:
+  // Could wrap in try-catch block for production apps
+  // ═══════════════════════════════════════════════════════════════════════════
+  
   Future<void> _loadSettings() async {
+    // Parallel execution - all three calls start simultaneously
     final notifications = await _settingsDataSource.getNotificationsEnabled();
     final biometrics = await _settingsDataSource.getBiometricsEnabled();
     final language = await _settingsDataSource.getLanguage();
     
+    // Update UI with loaded settings
+    // setState() triggers a rebuild with new values
     setState(() {
       _notificationsEnabled = notifications;
       _biometricsEnabled = biometrics;
@@ -130,10 +306,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🎯 WIDGET LIFECYCLE - dispose()
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 
+  // WHAT: Called when the widget is permanently removed from the widget tree
+  // WHEN: Widget is popped from navigation, parent removes it, app closes
+  // WHY: Prevent memory leaks by cleaning up resources
+  // 
+  // CRITICAL FOR:
+  // ✅ Removing listeners (prevents memory leaks)
+  // ✅ Canceling timers and subscriptions
+  // ✅ Disposing controllers (AnimationController, TextEditingController)
+  // ✅ Closing streams and sockets
+  // 
+  // MEMORY LEAK EXAMPLE:
+  // If we don't remove the listener, _onAuthStateChanged will still be called
+  // even after this widget is destroyed, causing crashes and memory leaks.
+  // 
+  // BEST PRACTICES:
+  // ✅ Always call super.dispose() last
+  // ✅ Remove all listeners added in initState()
+  // ✅ Dispose all controllers created in initState()
+  // ═══════════════════════════════════════════════════════════════════════════
+  
   @override
   void dispose() {
+    // Clean up listeners to prevent memory leaks
     _authController.removeListener(_onAuthStateChanged);
-    super.dispose();
+    super.dispose(); // Always call super last!
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -273,11 +474,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🎯 REACTIVE UI - ValueListenableBuilder Pattern
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 
+  // WHAT: Widget that rebuilds when a ValueNotifier changes
+  // WHY: More efficient than setState() for external state changes
+  // WHEN: Perfect for observing services that extend ValueNotifier
+  // 
+  // HOW IT WORKS:
+  // 1. ValueListenableBuilder registers as listener to _localizationService
+  // 2. When _localizationService.value changes, builder() is called
+  // 3. Only this builder rebuilds, not the entire widget
+  // 4. Much more efficient than setState() for external state!
+  // 
+  // PARAMETERS:
+  // - valueListenable: The ValueNotifier to observe
+  // - builder: Function called when value changes
+  // - child: Optional static child (performance optimization)
+  // 
+  // ALTERNATIVES:
+  // - StreamBuilder: For Stream<T> instead of ValueNotifier<T>
+  // - FutureBuilder: For Future<T> instead of ValueNotifier<T>
+  // - AnimatedBuilder: For Animation<T> instead of ValueNotifier<T>
+  // ═══════════════════════════════════════════════════════════════════════════
+  
   @override
   Widget build(BuildContext context) {
+    // Reactive UI: Rebuilds when language changes
     return ValueListenableBuilder<String>(
-      valueListenable: _localizationService,
-      builder: (context, language, _) {
+      valueListenable: _localizationService, // Observable service
+      builder: (context, language, _) {       // Rebuild function
         return Scaffold(
           appBar: AppBar(
             title: Text(_localizationService.translate('profile')),
@@ -289,9 +516,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
+          // Nested ValueListenableBuilder for authentication state
+          // This demonstrates how to compose multiple reactive widgets
           body: ValueListenableBuilder<AuthState>(
-        valueListenable: _authController,
-        builder: (context, state, _) {
+        valueListenable: _authController, // Observable auth controller
+        builder: (context, state, _) {    // Rebuild when auth state changes
           if (state is AuthLoading || state is AuthInitial) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -315,10 +544,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 24),
                   
-                  // Theme Mode Selector
+                  // Triple-nested ValueListenableBuilder!
+                  // This shows how reactive widgets can be composed
+                  // Each builder only rebuilds when its specific value changes
                   ValueListenableBuilder<ThemeMode>(
-                    valueListenable: _themeService,
-                    builder: (context, mode, _) {
+                    valueListenable: _themeService, // Observable theme service
+                    builder: (context, mode, _) {   // Rebuild when theme changes
                       return ThemeModeSelector(
                         currentMode: mode,
                         onChanged: (newMode) => _themeService.setTheme(newMode),
